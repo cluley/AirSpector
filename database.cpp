@@ -88,17 +88,17 @@ void database::aircraftsRequest(QString date, QString airport, direction dir)
                          "FROM bookings.flights f "
                          "JOIN bookings.airports_data ad ON ad.airport_code = f.departure_airport "
                          "WHERE f.arrival_airport = " + airport +
-                         " AND DATE(f.scheduled_departure) = " + date +
-                         " ORDER BY f.scheduled_arrival ASC;");
+                         " AND DATE(f.scheduled_departure) = '" + date + "'" +
+                         " ORDER BY f.scheduled_arrival ASC;", *DB);
     }
     else if(dir == direction::departure)
     {
         qModel->setQuery("SELECT flight_no, scheduled_departure, ad.airport_name->>'ru' as \"Name\" "
                      "FROM bookings.flights f "
                      "JOIN bookings.airports_data ad ON ad.airport_code = f.arrival_airport "
-                     "WHERE f.departure_airport = " + airport +
-                     "AND DATE(f.scheduled_departure) = " + date +
-                     "ORDER BY f.scheduled_departure ASC;");
+                     "WHERE f.departure_airport = " + airport  +
+                     "AND DATE(f.scheduled_departure) = '" + date + "'" +
+                     "ORDER BY f.scheduled_departure ASC;", *DB);
     }
 
     qModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Номер рейса"));
