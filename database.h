@@ -32,7 +32,8 @@ public:
     void bindView(QTableView* view_);
     void airportsRequest();
     void dateRangeRequests();
-    void aircraftsRequest(QString date, QString airport, direction dir);
+    void aircraftsRequest(const QString date, const QString airport, const direction dir);
+    void congestionStatRequest(const QString airport);
 
 private:
     QSqlDatabase* DB;
@@ -43,7 +44,8 @@ signals:
     void sig_sendStatusConnection(bool);
     void sig_sendQueryError(QSqlError err);
     void sig_sendAirportsList(QMap<QString, QString> _airports);
-    void sig_sendDayRange(QDateTime min, QDateTime max);
+    void sig_sendDayRange(QDate min, QDate max);
+    void sig_sendYearStatistic(QMap<int, int> yearStatistic);
 
 };
 

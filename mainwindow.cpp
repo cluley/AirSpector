@@ -7,10 +7,19 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->statusBar->showMessage("Подключение...");
+
+    ui->comBox_headings->addItem("Прилет");
+    ui->comBox_headings->addItem("Вылет");
+
     ui->pushB_ok->setToolTip("Отобразить результат по выбранным параметрам");
     ui->pushB_ok->setToolTipDuration(5000);
 
+    ui->pushB_stat->setToolTip("Открыть статистику по выбранному аэропорту");
+    ui->pushB_stat->setToolTipDuration(5000);
+
     msgBox = new QMessageBox(this);
+
+    statistics = new congestion(this);
 
     demoDB = new database(this);
     connectToDB();
@@ -23,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(demoDB, &database::sig_sendAirportsList, this, &MainWindow::slot_setAirportsList);
 
     connect(demoDB, &database::sig_sendDayRange, this, &MainWindow::slot_setDateTimeRange);
+
+    connect(demoDB, &database::sig_sendYearStatistic, statistics, &congestion::slot_displayChart);
 }
 
 MainWindow::~MainWindow()
@@ -30,7 +41,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::connectToDB(unsigned long secs)
+void MainWindow::connectToDB(const unsigned long secs)
 {
     auto connection = [this, secs]{
                                 QThread::sleep(secs);
@@ -39,7 +50,7 @@ void MainWindow::connectToDB(unsigned long secs)
     QtConcurrent::run(connection);
 }
 
-void MainWindow::connStatusProcessing(bool status)
+void MainWindow::connStatusProcessing(const bool status)
 {
     if(status == active){
         ui->statusBar->setStyleSheet("color:green");
@@ -66,6 +77,8 @@ void MainWindow::minimumDataParser()
 
 //    auto dateRangeRequests = [this]{ demoDB->dateRangeRequests();};
 
+//    QtConcurrent::run(airportsRequest).then(dateRangeRequests);
+
     QtConcurrent::run(airportsRequest);
 
     QDate min;
@@ -73,18 +86,15 @@ void MainWindow::minimumDataParser()
     QDate max;
     max.setDate(2017, 9, 15);
     ui->datEd_departureDay->setDateRange(min, max);
-
-    ui->comBox_headings->addItem("Прилет");
-    ui->comBox_headings->addItem("Вылет");
 }
 
-void MainWindow::queryErrorWorker(QSqlError err)
+void MainWindow::queryErrorWorker(const QSqlError err)
 {
     msgBox->setText(err.text());
     msgBox->exec();
 }
 
-void MainWindow::slot_setAirportsList(QMap<QString, QString> _airports)
+void MainWindow::slot_setAirportsList(const QMap<QString, QString> _airports)
 {
     airports = _airports;
 
@@ -93,11 +103,14 @@ void MainWindow::slot_setAirportsList(QMap<QString, QString> _airports)
     }
 }
 
-void MainWindow::slot_setDateTimeRange(QDateTime min, QDateTime max)
+void MainWindow::slot_setDateTimeRange(const QDate firstDay, const QDate lastDay)
 {
+    QDateTime min;
+    min.setDate(firstDay);
+    QDateTime max;
+    max.setDate(lastDay);
     ui->datEd_departureDay->setDateTimeRange(min, max);
 }
-
 
 void MainWindow::on_pushB_ok_clicked()
 {
@@ -107,6 +120,19 @@ void MainWindow::on_pushB_ok_clicked()
 
     database::direction dir = static_cast<database::direction>(ui->comBox_headings->currentIndex());
 
-    demoDB->aircraftsRequest(date, airport, dir);
+    auto request = [this, date, airport, dir]{ demoDB->aircraftsRequest(date, airport, dir); };
+    QtConcurrent::run(request);
+}
+
+
+void MainWindow::on_pushB_stat_clicked()
+{
+    QString airport = "'" + airports[ui->comBox_airports->currentText()] + "'";
+
+    auto request = [this, airport]{ demoDB->congestionStatRequest(airport); };
+    QtConcurrent::run(request);
+
+    statistics->setWindowModality(Qt::ApplicationModal);
+    statistics->show();
 }
 

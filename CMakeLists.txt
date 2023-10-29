@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql Concurrent)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Concurrent)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql Concurrent PrintSupport)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Concurrent PrintSupport)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -19,6 +19,11 @@ set(PROJECT_SOURCES
         mainwindow.ui
         database.h
         database.cpp
+        qcustomplot.h
+        qcustomplot.cpp
+        congestion.h
+        congestion.cpp
+        congestion.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -46,7 +51,8 @@ endif()
 
 target_link_libraries(AirSpector PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
                                                               Qt6::Sql
-                                                              Qt6::Concurrent)
+                                                              Qt6::Concurrent
+                                                              Qt6::PrintSupport)
 
 set_target_properties(AirSpector PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

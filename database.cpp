@@ -43,7 +43,7 @@ void database::bindView(QTableView *view_)
 
 void database::airportsRequest()
 {
-    qModel->setQuery("SELECT airport_name->>'ru' as \"airportName\", airport_code as \"airportCode\" FROM bookings.airports_data", *DB);
+    qModel->setQuery("SELECT airport_name->>'ru' as \"airportName\", airport_code as \"airportCode\" FROM bookings.airports_data;", *DB);
 
     QMap<QString, QString> _airports;
 
@@ -66,10 +66,13 @@ void database::airportsRequest()
 
 void database::dateRangeRequests()
 {
-    qModel->setQuery("SELECT DATE(MIN(scheduled_departure)) as \"firstDay\", DATE(MAX(scheduled_departure)) as \"lastDay\" FROM flights", *DB);
+    qModel->setQuery("SELECT date_trunc('day', MIN(scheduled_departure)) as \"firstDay\", date_trunc('day', MAX(scheduled_departure)) as \"lastDay\" FROM bookings.flights;", *DB);
 
-    qDebug() << qModel->record().value("firstDay").toString();
-    qDebug() << qModel->record().value("lastDay").toString();
+    QDate firstDay = qModel->record().value("firstDay").toDate();
+    QDate lastDay = qModel->record().value("lastDay").toDate();
+
+    qDebug() << firstDay;
+    qDebug() << lastDay;
 
     if (qModel->lastError().isValid()){
 
@@ -77,10 +80,10 @@ void database::dateRangeRequests()
         emit sig_sendQueryError(err);
     }
 
-    //    emit sig_sendDayRange(firstDay, lastDay);
+    emit sig_sendDayRange(firstDay, lastDay);
 }
 
-void database::aircraftsRequest(QString date, QString airport, direction dir)
+void database::aircraftsRequest(const QString date, const QString airport, const direction dir)
 {
     if(dir == direction::arrival)
     {
@@ -90,6 +93,8 @@ void database::aircraftsRequest(QString date, QString airport, direction dir)
                          "WHERE f.arrival_airport = " + airport +
                          " AND DATE(f.scheduled_departure) = '" + date + "'" +
                          " ORDER BY f.scheduled_arrival ASC;", *DB);
+
+        qModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Аэропорт назначения"));
     }
     else if(dir == direction::departure)
     {
@@ -99,11 +104,12 @@ void database::aircraftsRequest(QString date, QString airport, direction dir)
                      "WHERE f.departure_airport = " + airport  +
                      "AND DATE(f.scheduled_departure) = '" + date + "'" +
                      "ORDER BY f.scheduled_departure ASC;", *DB);
+
+        qModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Аэропорт отправления"));
     }
 
     qModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Номер рейса"));
-    qModel->setHeaderData(1, Qt::Horizontal, QObject::tr("Запланированное прибытие"));
-    qModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Аэропорт"));
+    qModel->setHeaderData(1, Qt::Horizontal, QObject::tr("Время вылета"));
 
     if (qModel->lastError().isValid()){
 
@@ -113,7 +119,29 @@ void database::aircraftsRequest(QString date, QString airport, direction dir)
     else
     {
         view->setModel(qModel);
+        view->resizeColumnsToContents();
+        view->resizeRowsToContents();
         view->show();
     }
 
+}
+
+void database::congestionStatRequest(const QString airport)
+{
+    qModel->setQuery("SELECT count(flight_no), date_trunc('month', scheduled_departure) as \"Month\" from bookings.flights f "
+                     "WHERE (scheduled_departure::date > date('2016-08-31') and scheduled_departure::date <= date('2017-08-31')) "
+                     "and ( departure_airport = " + airport + " or arrival_airport = " + airport + ") "
+                     "group by \"Month\";", *DB);
+
+    QMap<int, int> yearStatistic;
+
+    for(uint8_t i = 0; i < 12; ++i)
+    {
+        int amount = qModel->record(i).value("count").toInt();
+        int month = (qModel->record(i).value("Month").toDate().toString("M").toInt()) - 1;
+
+        yearStatistic[month] = amount;
+    }
+
+    emit sig_sendYearStatistic(yearStatistic);
 }

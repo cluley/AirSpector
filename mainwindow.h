@@ -6,6 +6,7 @@
 #include <QtConcurrent>
 
 #include "database.h"
+#include "congestion.h"
 
 enum connStat{
     disabled,
@@ -24,23 +25,25 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void connectToDB(unsigned long secs = 0);
-    void connStatusProcessing(bool status);
+    void connectToDB(const unsigned long secs = 0);
+    void connStatusProcessing(const bool status);
     void minimumDataParser();
 
 private:
     Ui::MainWindow *ui;
     QMessageBox* msgBox;
     database* demoDB;
+    congestion* statistics;
 
     QMap<QString, QString> airports;
 
 signals:
 
 private slots:
-    void queryErrorWorker(QSqlError err);
-    void slot_setAirportsList(QMap<QString, QString> airports);
-    void slot_setDateTimeRange(QDateTime min, QDateTime max);
+    void queryErrorWorker(const QSqlError err);
+    void slot_setAirportsList(const QMap<QString, QString> airports);
+    void slot_setDateTimeRange(const QDate min, const QDate max);
     void on_pushB_ok_clicked();
+    void on_pushB_stat_clicked();
 };
 #endif // MAINWINDOW_H
