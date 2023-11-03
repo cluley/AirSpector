@@ -6,29 +6,88 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>900</width>
     <height>300</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Статистика</string>
   </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QTabWidget" name="tabW_charts">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="title">
-      <string>GroupBox</string>
+     <property name="tabPosition">
+      <enum>QTabWidget::South</enum>
      </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_year">
+      <attribute name="title">
+       <string>По годам </string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QCustomPlot" name="yearChart" native="true"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_month">
+      <attribute name="title">
+       <string>По месяцам</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="2">
+        <widget class="QComboBox" name="comBox_months"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="lbl_monthsList">
+         <property name="text">
+          <string>Месяц:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="lbl_yearHint">
+         <property name="text">
+          <string>2017 год</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="4">
+        <widget class="QCustomPlot" name="monthChart" native="true"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
-   </item>
-   <item>
-    <widget class="QCustomPlot" name="chart" native="true"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -37,6 +96,9 @@
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Close</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

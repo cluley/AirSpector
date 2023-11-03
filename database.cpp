@@ -7,6 +7,7 @@ database::database(QObject *parent)
     *DB = QSqlDatabase::addDatabase(POSTGRE_DRIVER, DB_NAME);
 
     qModel = new QSqlQueryModel(this);
+    qStatModel = new QSqlQueryModel(this);
 
 }
 
@@ -47,7 +48,7 @@ void database::airportsRequest()
 
     QMap<QString, QString> _airports;
 
-    for(uint8_t i = 0; i < 104; ++i){
+    for(uint8_t i = 0; i < qModel->rowCount(); ++i){
 
         QString name = qModel->record(i).value("airportName").toString();
         QString code = qModel->record(i).value("airportCode").toString();
@@ -126,22 +127,75 @@ void database::aircraftsRequest(const QString date, const QString airport, const
 
 }
 
-void database::congestionStatRequest(const QString airport)
+void database::yearStatRequest(const QString airport)
 {
-    qModel->setQuery("SELECT count(flight_no), date_trunc('month', scheduled_departure) as \"Month\" from bookings.flights f "
+    qStatModel->setQuery("SELECT count(flight_no), date_trunc('month', scheduled_departure) as \"Month\" from bookings.flights f "
                      "WHERE (scheduled_departure::date > date('2016-08-31') and scheduled_departure::date <= date('2017-08-31')) "
-                     "and ( departure_airport = " + airport + " or arrival_airport = " + airport + ") "
-                     "group by \"Month\";", *DB);
+                     "AND ( departure_airport = " + airport + " or arrival_airport = " + airport + ") "
+                     "GROUP BY \"Month\";", *DB);
 
-    QMap<int, int> yearStatistic;
+    QVector<int> yearStatistics(12);
 
-    for(uint8_t i = 0; i < 12; ++i)
+    for(uint8_t i = 0; i < yearStatistics.size(); ++i)
     {
-        int amount = qModel->record(i).value("count").toInt();
-        int month = (qModel->record(i).value("Month").toDate().toString("M").toInt()) - 1;
+        int amount = qStatModel->record(i).value("count").toInt();
+        int month = (qStatModel->record(i).value("Month").toDate().toString("M").toInt()) - 1;
 
-        yearStatistic[month] = amount;
+        yearStatistics[month] = amount;
     }
 
-    emit sig_sendYearStatistic(yearStatistic);
+    if (qStatModel->lastError().isValid()){
+
+        QSqlError err = qStatModel->lastError();
+        emit sig_sendQueryError(err);
+    }
+    else
+    {
+        emit sig_sendYearStatistics(yearStatistics);
+    }
+}
+
+void database::monthStatRequest(const QString airport)
+{
+    qStatModel->setQuery("SELECT count(flight_no), date_trunc('day', scheduled_departure) as \"Day\" from bookings.flights f "
+                     "WHERE(scheduled_departure::date > date('2016-08-31') AND scheduled_departure::date <= date('2017-08-31')) "
+                     "AND (departure_airport = " + airport + " or arrival_airport = " + airport + ") "
+                     "GROUP BY \"Day\";", *DB);
+
+    QVector<QVector<int>> monthStatistics(12);
+    monthStatistics[0].resize(31);
+    monthStatistics[1].resize(28);
+    monthStatistics[2].resize(31);
+    monthStatistics[3].resize(30);
+    monthStatistics[4].resize(31);
+    monthStatistics[5].resize(30);
+    monthStatistics[6].resize(31);
+    monthStatistics[7].resize(31);
+    monthStatistics[8].resize(30);
+    monthStatistics[9].resize(31);
+    monthStatistics[10].resize(30);
+    monthStatistics[11].resize(31);
+
+    uint16_t cntr = 0;
+    for(uint8_t i = 0, month = 8; i < 12; ++i, ++month)
+    {
+        if(month == 12){
+            month = 0;
+        }
+
+        for(uint8_t day = 0; day < monthStatistics[month].size(); ++day, ++cntr)
+        {
+            monthStatistics[month][day] = qStatModel->record(cntr).value("count").toInt();
+        }
+    }
+
+    if (qStatModel->lastError().isValid()){
+
+        QSqlError err = qStatModel->lastError();
+        emit sig_sendQueryError(err);
+    }
+    else
+    {
+        emit sig_sendMonthStatistics(monthStatistics);
+    }
 }

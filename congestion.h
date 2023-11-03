@@ -22,10 +22,18 @@ private:
     QCPGraph* graph;
     QCPBars* bars;
 
-    QMap<int, int> yearStatistic;
+    QVector<QString> months;
+    QVector<int> yearStatistics;
+    QVector<QVector<int>> monthStatistics;
 
+    void setDarkStyle(QCustomPlot* chart);
+    void prepareYearChart();
+    int ceiling(QVector<int> arr);
 public slots:
-    void slot_displayChart(QMap<int, int> statisticData);
+    void slot_setYearStatistics(QVector<int> statisticData);
+    void slot_setMonthStatistics(QVector<QVector<int>> statisticData);
+    void slot_displayYearChart();
+    void slot_displayMonthChart();
 };
 
 #endif // CONGESTION_H

@@ -37,6 +37,8 @@ private:
 
     QMap<QString, QString> airports;
 
+    void setDarkStyle();
+
 signals:
 
 private slots:

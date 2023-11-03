@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql Concurrent PrintSupport)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets Sql Concurrent PrintSupport)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Concurrent PrintSupport)
 
 set(PROJECT_SOURCES
@@ -19,17 +19,18 @@ set(PROJECT_SOURCES
         mainwindow.ui
         database.h
         database.cpp
-        qcustomplot.h
-        qcustomplot.cpp
         congestion.h
         congestion.cpp
         congestion.ui
 )
 
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/images.rc")
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(AirSpector
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        ${app_icon_resource_windows}
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET AirSpector APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -49,10 +50,15 @@ else()
     endif()
 endif()
 
+add_compile_definitions(QCUSTOMPLOT_USE_LIBRARY)
+
+target_link_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(AirSpector PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
                                                               Qt6::Sql
                                                               Qt6::Concurrent
-                                                              Qt6::PrintSupport)
+                                                              Qt6::PrintSupport
+                                                              qcustomplot2.dll)
 
 set_target_properties(AirSpector PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

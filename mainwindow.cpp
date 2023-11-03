@@ -5,6 +5,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    setDarkStyle();
+
     ui->setupUi(this);
     ui->statusBar->showMessage("Подключение...");
 
@@ -18,10 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushB_stat->setToolTipDuration(5000);
 
     msgBox = new QMessageBox(this);
-
     statistics = new congestion(this);
-
     demoDB = new database(this);
+
     connectToDB();
     demoDB->bindView(ui->tableView);
 
@@ -33,7 +34,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(demoDB, &database::sig_sendDayRange, this, &MainWindow::slot_setDateTimeRange);
 
-    connect(demoDB, &database::sig_sendYearStatistic, statistics, &congestion::slot_displayChart);
+    connect(demoDB, &database::sig_sendYearStatistics, statistics, &congestion::slot_setYearStatistics);
+
+    connect(demoDB, &database::sig_sendMonthStatistics, statistics, &congestion::slot_setMonthStatistics);
 }
 
 MainWindow::~MainWindow()
@@ -88,6 +91,33 @@ void MainWindow::minimumDataParser()
     ui->datEd_departureDay->setDateRange(min, max);
 }
 
+void MainWindow::setDarkStyle()
+{
+    QPalette darkPalette;
+
+    darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
+    darkPalette.setColor(QPalette::WindowText, Qt::white);
+    darkPalette.setColor(QPalette::Base, QColor(25, 25, 25));
+    darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, Qt::white);
+    darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
+    darkPalette.setColor(QPalette::ButtonText, Qt::white);
+    darkPalette.setColor(QPalette::BrightText, Qt::red);
+    darkPalette.setColor(QPalette::Link, QColor(10, 140, 70));
+    darkPalette.setColor(QPalette::Highlight, QColor(10, 140, 70));
+    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+
+    QFont font;
+
+    font.setFamily("Agency FB");
+    font.setBold(true);
+
+    qApp->setPalette(darkPalette);
+    qApp->setFont(font);
+}
+
 void MainWindow::queryErrorWorker(const QSqlError err)
 {
     msgBox->setText(err.text());
@@ -129,8 +159,9 @@ void MainWindow::on_pushB_stat_clicked()
 {
     QString airport = "'" + airports[ui->comBox_airports->currentText()] + "'";
 
-    auto request = [this, airport]{ demoDB->congestionStatRequest(airport); };
-    QtConcurrent::run(request);
+    auto requestYear = [this, airport]{ demoDB->yearStatRequest(airport); };
+    auto requestMonths = [this, airport] { demoDB->monthStatRequest(airport); };
+    QtConcurrent::run(requestYear).then(requestMonths);
 
     statistics->setWindowModality(Qt::ApplicationModal);
     statistics->show();

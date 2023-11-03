@@ -33,11 +33,13 @@ public:
     void airportsRequest();
     void dateRangeRequests();
     void aircraftsRequest(const QString date, const QString airport, const direction dir);
-    void congestionStatRequest(const QString airport);
+    void yearStatRequest(const QString airport);
+    void monthStatRequest(const QString airport);
 
 private:
     QSqlDatabase* DB;
     QSqlQueryModel* qModel;
+    QSqlQueryModel* qStatModel;
     QTableView* view;
 
 signals:
@@ -45,7 +47,8 @@ signals:
     void sig_sendQueryError(QSqlError err);
     void sig_sendAirportsList(QMap<QString, QString> _airports);
     void sig_sendDayRange(QDate min, QDate max);
-    void sig_sendYearStatistic(QMap<int, int> yearStatistic);
+    void sig_sendYearStatistics(QVector<int> yearStatistics);
+    void sig_sendMonthStatistics(QVector<QVector<int>> monthStatistics);
 
 };
 
