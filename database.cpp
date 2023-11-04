@@ -44,7 +44,8 @@ void database::bindView(QTableView *view_)
 
 void database::airportsRequest()
 {
-    qModel->setQuery("SELECT airport_name->>'ru' as \"airportName\", airport_code as \"airportCode\" FROM bookings.airports_data;", *DB);
+    qModel->setQuery("SELECT airport_name->>'ru' as \"airportName\", airport_code as \"airportCode\" "
+                     "FROM bookings.airports_data;", *DB);
 
     QMap<QString, QString> _airports;
 

@@ -42,7 +42,7 @@ private:
 signals:
 
 private slots:
-    void queryErrorWorker(const QSqlError err);
+    void slot_queryErrorWorker(const QSqlError err);
     void slot_setAirportsList(const QMap<QString, QString> airports);
     void slot_setDateTimeRange(const QDate min, const QDate max);
     void on_pushB_ok_clicked();

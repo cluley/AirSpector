@@ -175,6 +175,7 @@ void congestion::slot_displayMonthChart()
 
     ui->monthChart->rescaleAxes();
     ui->monthChart->xAxis->setRange(0, (monthStatistics[monthIdx].size() + 1));
+    ui->monthChart->yAxis->setNumberPrecision(10);
     ui->monthChart->yAxis->setRange(0, ceiling(monthStatistics[monthIdx]));
     ui->monthChart->replot();
 }

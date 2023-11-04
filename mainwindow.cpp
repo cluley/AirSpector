@@ -13,9 +13,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->comBox_headings->addItem("Прилет");
     ui->comBox_headings->addItem("Вылет");
 
+    ui->pushB_ok->setEnabled(false);
     ui->pushB_ok->setToolTip("Отобразить результат по выбранным параметрам");
     ui->pushB_ok->setToolTipDuration(5000);
 
+    ui->pushB_stat->setEnabled(false);
     ui->pushB_stat->setToolTip("Открыть статистику по выбранному аэропорту");
     ui->pushB_stat->setToolTipDuration(5000);
 
@@ -26,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     connectToDB();
     demoDB->bindView(ui->tableView);
 
-    connect(demoDB, &database::sig_sendQueryError, this, &MainWindow::queryErrorWorker);
+    connect(demoDB, &database::sig_sendQueryError, this, &MainWindow::slot_queryErrorWorker);
 
     connect(demoDB, &database::sig_sendStatusConnection, this, &MainWindow::connStatusProcessing);
 
@@ -118,7 +120,7 @@ void MainWindow::setDarkStyle()
     qApp->setFont(font);
 }
 
-void MainWindow::queryErrorWorker(const QSqlError err)
+void MainWindow::slot_queryErrorWorker(const QSqlError err)
 {
     msgBox->setText(err.text());
     msgBox->exec();
@@ -131,6 +133,9 @@ void MainWindow::slot_setAirportsList(const QMap<QString, QString> _airports)
     for(auto it = airports.cbegin(); it != airports.cend(); ++it){
         ui->comBox_airports->addItem(it.key());
     }
+
+    ui->pushB_ok->setEnabled(true);
+    ui->pushB_stat->setEnabled(true);
 }
 
 void MainWindow::slot_setDateTimeRange(const QDate firstDay, const QDate lastDay)
